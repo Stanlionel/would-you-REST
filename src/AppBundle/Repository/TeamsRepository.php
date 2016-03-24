@@ -10,4 +10,6 @@ namespace AppBundle\Repository;
  */
 class TeamsRepository extends \Doctrine\ORM\EntityRepository
 {
+ 
+   
 }
