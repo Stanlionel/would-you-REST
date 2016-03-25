@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -68,9 +69,20 @@ class ApiController extends Controller //Api Controller with all the function
      * @Route("/api/teams/{id}", name="editteam")
      * @Method("PUT")
      */
-    public function EditTeamAction($id)
-    {
-     
+    public function EditTeamAction($id,Request $request)
+    {   
+        $em = $this->getDoctrine()->getManager();
+        $team=$em->getRepository('AppBundle:Teams')->find($id);//find the team
+         if (!$team) {
+        throw $this->createNotFoundException(
+            'No team found for id '.$id
+        );// If the team is not existing,thorw the error
+     }else{
+        $data = json_decode($request->getContent(), true);
+        $name=$data['name'];
+        $em->getConnection()->exec("UPDATE Teams SET name='$name' WHERE id='$id';");//if the team is existing,update the data
+     }
+        return new Response('It is OK');
         
     }
     /**
@@ -99,8 +111,27 @@ class ApiController extends Controller //Api Controller with all the function
      * @Route("/api/team/", name="addteam")
      * @Method("POST")
      */
-    public function AddTeamAction()
-    {
+    public function AddTeamAction(Request $request)
+    { 
+        $em = $this->getDoctrine()->getManager();
+        $data = json_decode($request->getContent(), true);//trun the json to array
+        $name=$data['name'];
+        $id=(int)$data['id'];
+        $teams=$em->getRepository('AppBundle:Teams')->findAll();
+        $flag=1;//flag to test if the team is new
+        foreach($teams as $team){
+            if($team->getName()==$name){
+                $flag=0;//if the team is not new change the flag
+                break;
+            }
+        }//boucle to test if the team is new
+        if($flag==0){
+           throw $this->createNotFoundException(
+            'Team is not new:'.$name); //if the team is not new throw the errro
+        }else{
+        $em->getConnection()->exec("INSERT INTO Teams (id,name)VALUES('$id','$name');");//if the team is new,insert the data
+        }
+        return new Response('It is OK');
      
         
     }
@@ -154,11 +185,25 @@ class ApiController extends Controller //Api Controller with all the function
         return new Response($jsonContent);
      }
     /**
-     * @Route("/api/event/{id}", name="editevent")
+     * @Route("/api/events/{id}", name="editevent")
      * @Method("PUT")
      */
-      public function EditEventAction($id)
+      public function EditEventAction($id,Request $request)
     {
+        $em = $this->getDoctrine()->getManager();
+        $event=$em->getRepository('AppBundle:Events')->find($id);//Find the event
+        if (!$event) {
+        throw $this->createNotFoundException(
+            'No event found for id '.$id
+        );//If the event is not existing, throw the error
+     }else{
+        $data = json_decode($request->getContent(), true);//trun the json to array
+        $name=$data['name'];
+        $startTime=$data['eventStartDate'];
+        $endTime=$data['eventEndDate'];
+        $em->getConnection()->exec("UPDATE events SET name='$name',event_start_date='$startTime',event_end_date='$endTime'WHERE id='$id';");//if the team is new,insert the data
+     }
+        return new Response('It is OK');
      
         
     }
@@ -188,9 +233,16 @@ class ApiController extends Controller //Api Controller with all the function
      * @Route("/api/event/", name="addevent")
      * @Method("POST")
      */
-    public function AddEventAction()
+    public function AddEventAction(Request $request)
     {
-     
+        $em = $this->getDoctrine()->getManager();
+        $data = json_decode($request->getContent(), true);//trun the json to array
+        $name=$data['name'];
+        $id=(int)$data['id'];
+        $startTime=$data['eventStartDate'];
+        $endTime=$data['eventEndDate'];
+        $em->getConnection()->exec("INSERT INTO events (id,name,event_start_date,event_end_date)VALUES('$id','$name','$startTime','$endTime');");//if the team is new,insert the data
+        return new Response('It is OK');
         
     }
     
